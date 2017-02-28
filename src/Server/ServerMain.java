@@ -1,7 +1,7 @@
 package Server;
 
 /**
- * Created by shahad on 2/28/17.
+ * Created by Shahad Ishraq on 2/28/17.
  * This is the class with the main method of the server side application.
  * Upon receipt of the connection request from a client, the server will
  *      -save the <IP Address, Student ID> mapping .

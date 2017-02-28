@@ -1,7 +1,14 @@
 package Client;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+
+import static Client.FileChooserDemo.createImageIcon;
+
 
 /**
- * Created by shahad on 2/28/17.
+ * Created by Shahad Ishraq on 2/28/17.
  * This is the class with the executable main method of the client side application.
  * On startup,this method will
  *      -prompt the user for the server’s ‘IP Address’ and ‘Port Number’ as well as the ‘Student ID’.
@@ -26,8 +33,106 @@ package Client;
  * The client must be able to resubmit files and in that case it will be prompted whether the
  * files will be overwritten or both the copies to be retained (as we see in Windows).
  */
-public class ClientMain {
-    public static void main(String[] args) {
+public class ClientMain extends JFrame implements ActionListener {
+    JLabel label1;
+    JTextField tip;
+    JLabel label2;
+    JTextField tport;
+    JLabel label3;
+    JTextField tstdid;
+    JButton jb;
+    JButton upload;
+    String IP;
+    int port,stdID;
+    Container c;
+    JFileChooser fc;
+
+    public ClientMain()
+    {
+        super("Connect");
+        label1=new JLabel("IP");
+        tip=new JTextField(20);
+        label2=new JLabel("Port");
+        tport=new JTextField(20);
+        label3=new JLabel("Student ID");
+        tstdid=new JTextField(20);
+        jb=new JButton("Connect");
+
+
+        c=getContentPane();
+        c.setLayout(new FlowLayout());
+        c.add(label1);
+        c.add(tip);
+        c.add(label2);
+        c.add(tport);
+        c.add(label3);
+        c.add(tstdid);
+
+        c.add(jb);
+        jb.addActionListener(this);
+
+        setSize(550,70);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocation(300,300);
+        setVisible(true);
 
     }
+
+    public void actionPerformed(ActionEvent ae)
+    {
+        if(ae.getSource()== upload)
+        {
+            fc = new JFileChooser();
+            int returnVal = fc.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fc.getSelectedFile();
+                //This is where a real application would open the file.
+                label1 = new JLabel("Opening: " + file.getAbsolutePath() + ".");
+            } else {
+                label1 = new JLabel("Open command cancelled by user.");
+            }
+
+            c.remove(upload);
+            c.revalidate();
+            c.repaint();
+            c.add(label1);
+            c.revalidate();
+            c.repaint();
+        }
+        if(ae.getSource()==jb)
+        {
+            try {
+                IP = tip.getText();
+                port = Integer.parseInt(tport.getText());
+                stdID = Integer.parseInt(tstdid.getText());
+                JOptionPane.showMessageDialog(null, IP + ":"+ port + "@" + stdID);
+
+                //removing current elements
+                c.remove(label1);
+                c.remove(label2);
+                c.remove(label3);
+                c.remove(tip);
+                c.remove(tstdid);
+                c.remove(tport);
+                c.remove(jb);
+                c.revalidate();
+                c.repaint();
+
+                //adding Upload button
+                upload =new JButton("Upload",
+                        createImageIcon("Open16.gif"));
+                upload.addActionListener(this);
+                c.setLayout(new FlowLayout());
+                c.add(upload);
+                c.revalidate();
+                c.repaint();
+            }catch (Exception e)
+            {
+                JOptionPane.showMessageDialog(null, "Invalid input format!!");
+            }
+
+
+        }
+    }
+    public static void main(String args[]) { new ClientMain(); }
 }
