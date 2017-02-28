@@ -7,8 +7,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-
-
+import java.net.ServerSocket;
+import java.net.Socket;
 
 
 /**
@@ -43,6 +43,7 @@ import java.io.File;
  */
 public class ServerMain extends JFrame implements ActionListener {
 
+    public static int workerThreadCount;
     JLabel label1; //root
     JLabel label2; // File Types
     JLabel label3; //Number of folders
@@ -68,6 +69,7 @@ public class ServerMain extends JFrame implements ActionListener {
     public ServerMain()
     {
         super("Configure");
+        workerThreadCount = 0;
         //Initializing labels
         label1 = new JLabel("Root");
         label2 = new JLabel("Fyle Type");
@@ -180,26 +182,65 @@ public class ServerMain extends JFrame implements ActionListener {
 //                System.out.println("Folder allowed: "+allowFolder);
 //                System.out.println("Range given: "+isRange);
 
-//                JOptionPane.showMessageDialog(null, IP + ":"+ port + "@" + stdID);
-//
+
                 //removing current elements
                 c.removeAll();
                 c.repaint();
-//
+
 //                //adding Upload button
 //                upload =new JButton("Upload",
 //                        createImageIcon("Open16.gif"));
 //                upload.addActionListener(this);
 //                c.setLayout(new FlowLayout());
 //                c.add(upload);
+
+                this.setTitle("Starting Server");
+                label1 = new JLabel("Starting the Server...");
+                c.add(label1);
                 c.revalidate();
                 c.repaint();
+                connect();
             }catch (Exception e)
             {
                 JOptionPane.showMessageDialog(null, "Invalid input format!!");
             }
 
 
+        }
+    }
+
+    void connect()
+    {
+        int id = 1;
+
+        try
+        {
+            ServerSocket ss = new ServerSocket(5555);
+            JOptionPane.showMessageDialog(null, "Server has been started successfully.");
+
+            this.setTitle("Connected Users");
+            label1 = new JLabel("This is the list of connected users");
+            c.add(label1);
+            JTextArea area = new JTextArea();
+            c.add(area);
+            c.revalidate();
+            c.repaint();
+
+            while(true)
+            {
+                Socket s = ss.accept();		//TCP Connection
+                WorkerThread wt = new WorkerThread(s, id);
+                Thread t = new Thread(wt);
+                t.start();
+                workerThreadCount++;
+                area.append("Client [" + id + "] is now connected. No. of worker threads = " + workerThreadCount);
+                c.repaint();
+                id++;
+            }
+        }
+        catch(Exception e)
+        {
+            System.err.println("Problem in ServerSocket operation. Exiting main.");
         }
     }
 
