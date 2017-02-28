@@ -83,11 +83,12 @@ public class ClientMain extends JFrame implements ActionListener {
         if(ae.getSource()== upload)
         {
             fc = new JFileChooser();
+            fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             int returnVal = fc.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 //This is where a real application would open the file.
-                label1 = new JLabel("Opening: " + file.getAbsolutePath() + ".");
+                label1 = new JLabel("Opening: " + file.getAbsolutePath());
             } else {
                 label1 = new JLabel("Open command cancelled by user.");
             }
