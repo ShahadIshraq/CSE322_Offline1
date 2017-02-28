@@ -1,10 +1,13 @@
 package Server;
 
+import Client.FileChooserDemo;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+
 
 
 
@@ -58,36 +61,43 @@ public class ServerMain extends JFrame implements ActionListener {
 
     ButtonGroup group;
     JButton jb;
-    JButton upload;
+    JButton browse;
     JFileChooser fc;
     Container c;
 
     public ServerMain()
     {
         super("Configure");
+        //Initializing labels
         label1 = new JLabel("Root");
         label2 = new JLabel("Fyle Type");
-        label3 = new JLabel("Max No. of files/folders allowed to be uploaded");
+        label3 = new JLabel("Max No. of files/folders allowed");
         label4 = new JLabel("Allowable Student IDs");
-        label5 = new JLabel("Is folder uploading allowed?");
+        label5 = new JLabel("Allow uploading folder?");
 
-        root = new JTextField(20);
-        fType = new JTextField(20);
-        nOf = new JTextField(20);
-        stdIDs = new JTextField(20);
+        //initializing text fields
+        root = new JTextField(10);
+        fType = new JTextField(10);
+        nOf = new JTextField(5);
+        stdIDs = new JTextField(10);
 
+        //initializing buttons
         jb = new JButton("Save");
+        browse = new JButton("Browse",new ImageIcon("Open16.gif"));
         yes = new JRadioButton("Yes",true);
         no = new JRadioButton("No");
 
+        //adding the radio buttons to a group
         group = new ButtonGroup();
         group.add(yes);
         group.add(no);
 
+        //adding the components to the content pane
         c=getContentPane();
         c.setLayout(new FlowLayout());
         c.add(label1);
         c.add(root);
+        c.add(browse);
         c.add(label2);
         c.add(fType);
         c.add(label3);
@@ -97,38 +107,41 @@ public class ServerMain extends JFrame implements ActionListener {
         c.add(label5);
         c.add(yes);
         c.add(no);
-
         c.add(jb);
-        jb.addActionListener(this);
 
-        setSize(550,70);
+        //attaching the action listeners
+        jb.addActionListener(this);
+        browse.addActionListener(this);
+
+        //setting the frame
+        setSize(300,160);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocation(300,300);
         setVisible(true);
 
     }
 
+    /**
+     * This is the action listener.
+     * @param ae is the ActionEvent that triggered this listener
+     */
     public void actionPerformed(ActionEvent ae)
     {
-        if(ae.getSource()== upload)
+        if(ae.getSource()== browse)
         {
             fc = new JFileChooser();
-            fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int returnVal = fc.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 //This is where a real application would open the file.
-                label1 = new JLabel("Opening: " + file.getAbsolutePath());
+                //label1 = new JLabel("Opening: " + file.getAbsolutePath());
+                System.out.println("Root: "+file.getPath());
+                root.setText(file.getPath());
             } else {
-                label1 = new JLabel("Open command cancelled by user.");
+                //label1 = new JLabel("Open command cancelled by user.");
+                System.out.println("Open command cancelled by user.");
             }
-
-            c.remove(upload);
-            c.revalidate();
-            c.repaint();
-            c.add(label1);
-            c.revalidate();
-            c.repaint();
         }
         if(ae.getSource()==jb)
         {
@@ -136,18 +149,42 @@ public class ServerMain extends JFrame implements ActionListener {
                 path = root.getText();
                 types = fType.getText().split(",");
                 numberOfFiles = Integer.parseInt(nOf.getText());
+                String in = stdIDs.getText();
+                boolean allowFolder = yes.isSelected();
+                boolean isRange = false;
+                String temp [];
+                int startID,endID,IDs[];
+                if (in.matches("(\\d)+\\-(\\d)+")) {
+                    isRange = true ;
+                    temp = in.split("\\-");
+                    startID = Integer.parseInt(temp[0]);
+                    endID = Integer.parseInt(temp[1]);
+                    System.out.println("Range: "+startID+"-"+endID);
+                }
+                else if (in.matches("((\\d)+(,(\\d)+)*)"))
+                {
+                    temp = in.split(",");
+                    System.out.println("Allowed IDs: ");
+                    for (int i = 0 ; i<temp.length ; i++) System.out.print(temp[i]+" ");
+                }
+                else {
+                    JOptionPane.showMessageDialog(null, "Invalid input for student ID!!");
+                    return;
+                }
+
+//                System.out.println("Path: "+path);
+//                System.out.print("Types: ");
+//                for (int i = 0 ; i<types.length ; i++) System.out.print(types[i]+" ");
+//                System.out.println();
+//                System.out.println("Number of file: "+numberOfFiles);
+//                System.out.println("Folder allowed: "+allowFolder);
+//                System.out.println("Range given: "+isRange);
+
 //                JOptionPane.showMessageDialog(null, IP + ":"+ port + "@" + stdID);
 //
-//                //removing current elements
-//                c.remove(label1);
-//                c.remove(label2);
-//                c.remove(label3);
-//                c.remove(tip);
-//                c.remove(tstdid);
-//                c.remove(tport);
-//                c.remove(jb);
-//                c.revalidate();
-//                c.repaint();
+                //removing current elements
+                c.removeAll();
+                c.repaint();
 //
 //                //adding Upload button
 //                upload =new JButton("Upload",
@@ -155,8 +192,8 @@ public class ServerMain extends JFrame implements ActionListener {
 //                upload.addActionListener(this);
 //                c.setLayout(new FlowLayout());
 //                c.add(upload);
-//                c.revalidate();
-//                c.repaint();
+                c.revalidate();
+                c.repaint();
             }catch (Exception e)
             {
                 JOptionPane.showMessageDialog(null, "Invalid input format!!");
@@ -165,5 +202,9 @@ public class ServerMain extends JFrame implements ActionListener {
 
         }
     }
+
+
+
+
     public static void main(String[] args) {new ServerMain();    }
 }

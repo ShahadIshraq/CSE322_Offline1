@@ -109,19 +109,13 @@ public class ClientMain extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(null, IP + ":"+ port + "@" + stdID);
 
                 //removing current elements
-                c.remove(label1);
-                c.remove(label2);
-                c.remove(label3);
-                c.remove(tip);
-                c.remove(tstdid);
-                c.remove(tport);
-                c.remove(jb);
-                c.revalidate();
+                c.removeAll();
                 c.repaint();
 
                 //adding Upload button
+                this.setTitle("Upload");
                 upload =new JButton("Upload",
-                        createImageIcon("Open16.gif"));
+                        new ImageIcon("Open16.gif"));
                 upload.addActionListener(this);
                 c.setLayout(new FlowLayout());
                 c.add(upload);
