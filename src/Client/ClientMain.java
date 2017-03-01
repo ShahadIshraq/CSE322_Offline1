@@ -2,7 +2,8 @@ package Client;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.io.*;
+import java.net.Socket;
 
 import static Client.FileChooserDemo.createImageIcon;
 
@@ -46,6 +47,15 @@ public class ClientMain extends JFrame implements ActionListener {
     int port,stdID;
     Container c;
     JFileChooser fc;
+
+    //Fields used for tcp communications
+    private Socket s;
+    private BufferedReader br;
+    private PrintWriter pr;
+    private ObjectInputStream inputStream;
+
+    //Specifications
+    private String[] types;
 
     public ClientMain()
     {
@@ -100,17 +110,34 @@ public class ClientMain extends JFrame implements ActionListener {
             c.revalidate();
             c.repaint();
         }
-        if(ae.getSource()==jb)
+        if(ae.getSource()==jb) //Client wants to connect
         {
             try {
                 IP = tip.getText();
                 port = Integer.parseInt(tport.getText());
                 stdID = Integer.parseInt(tstdid.getText());
-                JOptionPane.showMessageDialog(null, IP + ":"+ port + "@" + stdID);
+                if (connect(IP,port)) JOptionPane.showMessageDialog(null, "Connection Successful!");
+                else
+                {
+                    JOptionPane.showMessageDialog(null, "Could not connect to the server!");
+                    return;
+                }
 
                 //removing current elements
                 c.removeAll();
                 c.repaint();
+
+                //Chatting with the server about the specifications
+                System.out.println(stdID);
+                pr.println(Integer.toString(stdID));
+                pr.flush();
+
+                inputStream = new ObjectInputStream(s.getInputStream());
+                types = (String[]) inputStream.readObject();
+                String fTypes = "";
+                for (int i = 0; i < types.length ; i++) fTypes += types[i]+" ";
+                JOptionPane.showMessageDialog(null, "Allowed file types: "+fTypes);
+
 
                 //adding Upload button
                 this.setTitle("Upload");
@@ -129,5 +156,22 @@ public class ClientMain extends JFrame implements ActionListener {
 
         }
     }
+
+    private boolean connect(String IP, int port) {
+
+        try
+        {
+            s = new Socket(IP, port);
+            br = new BufferedReader(new InputStreamReader(s.getInputStream()));
+            pr = new PrintWriter(s.getOutputStream());
+        }
+        catch(Exception e)
+        {
+            System.err.println("Problem in connecting with the server. Exiting main.");
+            return false;
+        }
+        return true;
+    }
+
     public static void main(String args[]) { new ClientMain(); }
 }

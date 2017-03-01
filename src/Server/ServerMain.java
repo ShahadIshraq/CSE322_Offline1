@@ -43,7 +43,6 @@ import java.net.Socket;
  */
 public class ServerMain extends JFrame implements ActionListener {
 
-    public static int workerThreadCount;
     JLabel label1; //root
     JLabel label2; // File Types
     JLabel label3; //Number of folders
@@ -65,11 +64,12 @@ public class ServerMain extends JFrame implements ActionListener {
     JButton browse;
     JFileChooser fc;
     Container c;
+    JTextArea area;
+
 
     public ServerMain()
     {
         super("Configure");
-        workerThreadCount = 0;
         //Initializing labels
         label1 = new JLabel("Root");
         label2 = new JLabel("Fyle Type");
@@ -137,7 +137,6 @@ public class ServerMain extends JFrame implements ActionListener {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 //This is where a real application would open the file.
-                //label1 = new JLabel("Opening: " + file.getAbsolutePath());
                 System.out.println("Root: "+file.getPath());
                 root.setText(file.getPath());
             } else {
@@ -145,7 +144,7 @@ public class ServerMain extends JFrame implements ActionListener {
                 System.out.println("Open command cancelled by user.");
             }
         }
-        if(ae.getSource()==jb)
+        if(ae.getSource()==jb) //The server wants to start
         {
             try {
                 path = root.getText();
@@ -199,7 +198,20 @@ public class ServerMain extends JFrame implements ActionListener {
                 c.add(label1);
                 c.revalidate();
                 c.repaint();
-                connect();
+
+                //Starting connection thread
+                new Thread(new ConnectionThread(this)).start();
+                System.out.println(".");
+                this.setTitle("Connected Users");
+                c.removeAll();
+                label1 = new JLabel("This is the list of connected users");
+                c.add(label1);
+                area = new JTextArea(20,20);
+                c.add(area);
+                c.revalidate();
+                c.repaint();
+
+
             }catch (Exception e)
             {
                 JOptionPane.showMessageDialog(null, "Invalid input format!!");
@@ -209,43 +221,30 @@ public class ServerMain extends JFrame implements ActionListener {
         }
     }
 
-    void connect()
-    {
-        int id = 1;
 
-        try
-        {
-            ServerSocket ss = new ServerSocket(5555);
-            JOptionPane.showMessageDialog(null, "Server has been started successfully.");
 
-            this.setTitle("Connected Users");
-            label1 = new JLabel("This is the list of connected users");
-            c.add(label1);
-            JTextArea area = new JTextArea();
-            c.add(area);
-            c.revalidate();
-            c.repaint();
 
-            while(true)
-            {
-                Socket s = ss.accept();		//TCP Connection
-                WorkerThread wt = new WorkerThread(s, id);
-                Thread t = new Thread(wt);
-                t.start();
-                workerThreadCount++;
-                area.append("Client [" + id + "] is now connected. No. of worker threads = " + workerThreadCount);
-                c.repaint();
-                id++;
-            }
-        }
-        catch(Exception e)
-        {
-            System.err.println("Problem in ServerSocket operation. Exiting main.");
-        }
+
+
+    public static void main(String[] args) { new ServerMain();    }
+
+    /**
+     * This is a static method used to generate message dialogue box with a given message.
+     * @param s is the string to be shown as message
+     */
+    public static void showMessage(String s) {
+        JOptionPane.showMessageDialog(null,s);
     }
 
+    /**
+     * A method used to update the server side interface when a client connects.
+     * @param studentID
+     * @param id
+     */
+    public void addClient(int studentID, int id)
+    {
+        area.append(id+". Student ID: "+studentID+"\n");
+    }
 
-
-
-    public static void main(String[] args) {new ServerMain();    }
+    
 }

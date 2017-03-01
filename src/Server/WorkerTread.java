@@ -13,12 +13,15 @@ class WorkerThread implements Runnable
     private Socket socket;
     private InputStream is;
     private OutputStream os;
+    private ServerMain serverMain;
 
+    private int studentID ;
     private int id = 0;
 
-    public WorkerThread(Socket s, int id)
+    public WorkerThread(Socket s, int id , ServerMain serverMain)
     {
         this.socket = s;
+        this.serverMain = serverMain ;
 
         try
         {
@@ -38,8 +41,24 @@ class WorkerThread implements Runnable
         BufferedReader br = new BufferedReader(new InputStreamReader(this.is));
         PrintWriter pr = new PrintWriter(this.os);
 
-        pr.println("Your id is: " + this.id);
-        pr.flush();
+        //Chatting with the client about specifications
+        try {
+            //Getting the student ID
+            String stID = br.readLine();
+            System.out.println(".");
+            studentID = Integer.parseInt(stID);
+            System.out.println(".");
+            serverMain.addClient(studentID,id);
+            System.out.println(".");
+            //Sending the file types
+            ObjectOutputStream outputStream = new ObjectOutputStream(
+                    socket.getOutputStream());
+            outputStream.writeObject(serverMain.types);
+            outputStream.flush();
+        }catch (Exception e)
+        {
+            System.out.println(e);
+        }
 
         String str;
 
@@ -125,8 +144,8 @@ class WorkerThread implements Runnable
 
         }
 
-        ServerMain.workerThreadCount--;
+        ConnectionThread.workerThreadCount--;
         System.out.println("Client [" + id + "] is now terminating. No. of worker threads = "
-                + ServerMain.workerThreadCount);
+                + ConnectionThread.workerThreadCount);
     }
 }
