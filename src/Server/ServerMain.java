@@ -1,14 +1,12 @@
 package Server;
 
-import Client.FileChooserDemo;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetAddress;
+import java.util.ArrayList;
 
 
 /**
@@ -65,11 +63,14 @@ public class ServerMain extends JFrame implements ActionListener {
     JFileChooser fc;
     Container c;
     JTextArea area;
+    private ArrayList<Student> connected;
 
 
     public ServerMain()
     {
         super("Configure");
+        connected = new ArrayList();
+
         //Initializing labels
         label1 = new JLabel("Root");
         label2 = new JLabel("Fyle Type");
@@ -165,8 +166,6 @@ public class ServerMain extends JFrame implements ActionListener {
                 else if (in.matches("((\\d)+(,(\\d)+)*)"))
                 {
                     temp = in.split(",");
-                    System.out.println("Allowed IDs: ");
-                    for (int i = 0 ; i<temp.length ; i++) System.out.print(temp[i]+" ");
                 }
                 else {
                     JOptionPane.showMessageDialog(null, "Invalid input for student ID!!");
@@ -201,7 +200,6 @@ public class ServerMain extends JFrame implements ActionListener {
 
                 //Starting connection thread
                 new Thread(new ConnectionThread(this)).start();
-                System.out.println(".");
                 this.setTitle("Connected Users");
                 c.removeAll();
                 label1 = new JLabel("This is the list of connected users");
@@ -240,10 +238,55 @@ public class ServerMain extends JFrame implements ActionListener {
      * A method used to update the server side interface when a client connects.
      * @param studentID
      * @param id
+     * @param inetAddress
      */
-    public void addClient(int studentID, int id)
+    public boolean addClient(int studentID, int id, InetAddress inetAddress)
     {
-        area.append(id+". Student ID: "+studentID+"\n");
+        System.out.println("In addClient");
+        Student newStudent = new Student(studentID , inetAddress);
+        boolean hit = false;
+        String message = "Connection request from Student ID: "+studentID+" IP: "+inetAddress+"\nMatches: \n";
+        for (int i = 0 ; i < connected.size() ; i++)
+        {
+            if (newStudent.getInetAddress().equals(connected.get(i).getInetAddress()))
+            {
+                hit = true ;
+                //Another connection request from the same IP
+                if (newStudent.getStudentID() == connected.get(i).getStudentID())
+                {
+                    //Another connection request from the same student ID and IP
+                    message += " "+i+". Student ID: "+studentID+" IP: "+inetAddress+"\n";
+                }
+                else
+                {
+                    //Only IP matches
+                    message += " "+i+". Student ID: "+connected.get(i).getStudentID()+" IP: "+inetAddress+"\n";
+                }
+
+            }
+            else if (newStudent.getStudentID() == connected.get(i).getStudentID())
+            {
+                hit = true ;
+                //Another connection request from the same student ID
+                message += " "+i+". Student ID: "+studentID+" IP: "+connected.get(i).getInetAddress()+"\n";
+            }
+        }
+        System.out.println("After the loop.Hit: "+hit);
+        if (hit) {
+            message += "Allow the connection?";
+            int reply = JOptionPane.showConfirmDialog(null, message, "Someone might me cheating", JOptionPane.YES_NO_OPTION);
+            if (reply == JOptionPane.YES_OPTION) {
+                connected.add(newStudent);
+                area.append(id+". Student ID: "+studentID+" IP: "+inetAddress+"\n");
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        connected.add(newStudent);
+        area.append(id+". Student ID: "+studentID+" IP: "+inetAddress+"\n");
+        return true;
     }
 
     

@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static Client.FileChooserDemo.createImageIcon;
 
@@ -55,7 +57,7 @@ public class ClientMain extends JFrame implements ActionListener {
     private ObjectInputStream inputStream;
 
     //Specifications
-    private String[] types;
+    private ArrayList<String> fileTypes;
 
     public ClientMain()
     {
@@ -122,22 +124,28 @@ public class ClientMain extends JFrame implements ActionListener {
                     JOptionPane.showMessageDialog(null, "Could not connect to the server!");
                     return;
                 }
-
+                System.out.println("Changing the dialogue box...");
                 //removing current elements
                 c.removeAll();
                 c.repaint();
+                revalidate();
+                System.out.println("Changed...");
 
-                //Chatting with the server about the specifications
-                System.out.println(stdID);
-                pr.println(Integer.toString(stdID));
-                pr.flush();
+                ///////////////////////////////////////////////////////
+                ///Chatting with the server about the specifications///
+                ///////////////////////////////////////////////////////
 
+
+                //getting the allowed file types
                 inputStream = new ObjectInputStream(s.getInputStream());
-                types = (String[]) inputStream.readObject();
+                System.out.println("Getting the file types...");
+                String[] types = (String[]) inputStream.readObject();
                 String fTypes = "";
                 for (int i = 0; i < types.length ; i++) fTypes += types[i]+" ";
                 JOptionPane.showMessageDialog(null, "Allowed file types: "+fTypes);
-
+                fileTypes = new ArrayList(Arrays.asList(types));
+                if (fileTypes.contains("py")) System.out.println("oka");
+                //
 
                 //adding Upload button
                 this.setTitle("Upload");
@@ -158,18 +166,29 @@ public class ClientMain extends JFrame implements ActionListener {
     }
 
     private boolean connect(String IP, int port) {
-
+        System.out.println("Trying to connect...");
         try
         {
             s = new Socket(IP, port);
             br = new BufferedReader(new InputStreamReader(s.getInputStream()));
             pr = new PrintWriter(s.getOutputStream());
+            System.out.println("Sending student ID");
+            pr.println(Integer.toString(stdID));
+            pr.flush();
+            System.out.println("Waiting for confirmation...");
+            String confirmation = br.readLine();
+            System.out.println("    Received reply: "+confirmation);
+            if(confirmation.equals("Go home")) {
+                System.out.println("Failed!");;
+                return false;
+            }
         }
         catch(Exception e)
         {
             System.err.println("Problem in connecting with the server. Exiting main.");
             return false;
         }
+        System.out.println("Successful!");
         return true;
     }
 

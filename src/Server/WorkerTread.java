@@ -10,10 +10,13 @@ import java.net.Socket;
  */
 class WorkerThread implements Runnable
 {
+    //Fields for the TCP communication
     private Socket socket;
     private InputStream is;
     private OutputStream os;
     private ServerMain serverMain;
+    String studentIP;
+
 
     private int studentID ;
     private int id = 0;
@@ -40,17 +43,37 @@ class WorkerThread implements Runnable
     {
         BufferedReader br = new BufferedReader(new InputStreamReader(this.is));
         PrintWriter pr = new PrintWriter(this.os);
+        ///////////////////////////////////////////////////
+        ///Chatting with the client about specifications///
+        ///////////////////////////////////////////////////
 
-        //Chatting with the client about specifications
         try {
+
             //Getting the student ID
             String stID = br.readLine();
-            System.out.println(".");
             studentID = Integer.parseInt(stID);
-            System.out.println(".");
-            serverMain.addClient(studentID,id);
-            System.out.println(".");
+            if(!serverMain.addClient(studentID,id, socket.getInetAddress()))
+            {
+                pr.println("Go home");
+                try
+                {
+                    this.is.close();
+                    this.os.close();
+                    this.socket.close();
+                }
+                catch(Exception e)
+                {
+                    System.out.println(e);
+                }
+                System.out.println("Denied connection to "+studentID+"@"+socket.getInetAddress());
+                return;
+            }
+            else pr.println("ok");
+            pr.flush();
+
+
             //Sending the file types
+            System.out.println("Sending file types to "+id);
             ObjectOutputStream outputStream = new ObjectOutputStream(
                     socket.getOutputStream());
             outputStream.writeObject(serverMain.types);
