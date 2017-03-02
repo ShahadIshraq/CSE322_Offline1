@@ -192,11 +192,11 @@ public class ServerMain extends JFrame implements ActionListener {
 //                c.setLayout(new FlowLayout());
 //                c.add(upload);
 
-                this.setTitle("Starting Server");
-                label1 = new JLabel("Starting the Server...");
-                c.add(label1);
-                c.revalidate();
-                c.repaint();
+//                this.setTitle("Starting Server");
+//                label1 = new JLabel("Starting the Server...");
+//                c.add(label1);
+//                c.revalidate();
+//                c.repaint();
 
                 //Starting connection thread
                 new Thread(new ConnectionThread(this)).start();
@@ -226,6 +226,7 @@ public class ServerMain extends JFrame implements ActionListener {
 
     public static void main(String[] args) { new ServerMain();    }
 
+
     /**
      * This is a static method used to generate message dialogue box with a given message.
      * @param s is the string to be shown as message
@@ -234,18 +235,18 @@ public class ServerMain extends JFrame implements ActionListener {
         JOptionPane.showMessageDialog(null,s);
     }
 
+
+
     /**
      * A method used to update the server side interface when a client connects.
-     * @param studentID
-     * @param id
-     * @param inetAddress
+     * @param newStudent
      */
-    public boolean addClient(int studentID, int id, InetAddress inetAddress)
+    public boolean addClient(Student newStudent)
     {
         System.out.println("In addClient");
-        Student newStudent = new Student(studentID , inetAddress);
+
         boolean hit = false;
-        String message = "Connection request from Student ID: "+studentID+" IP: "+inetAddress+"\nMatches: \n";
+        String message = "Connection request from Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\nMatches: \n";
         for (int i = 0 ; i < connected.size() ; i++)
         {
             if (newStudent.getInetAddress().equals(connected.get(i).getInetAddress()))
@@ -255,12 +256,12 @@ public class ServerMain extends JFrame implements ActionListener {
                 if (newStudent.getStudentID() == connected.get(i).getStudentID())
                 {
                     //Another connection request from the same student ID and IP
-                    message += " "+i+". Student ID: "+studentID+" IP: "+inetAddress+"\n";
+                    message += " "+i+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n";
                 }
                 else
                 {
                     //Only IP matches
-                    message += " "+i+". Student ID: "+connected.get(i).getStudentID()+" IP: "+inetAddress+"\n";
+                    message += " "+i+". Student ID: "+connected.get(i).getStudentID()+" IP: "+newStudent.getInetAddress()+"\n";
                 }
 
             }
@@ -268,7 +269,7 @@ public class ServerMain extends JFrame implements ActionListener {
             {
                 hit = true ;
                 //Another connection request from the same student ID
-                message += " "+i+". Student ID: "+studentID+" IP: "+connected.get(i).getInetAddress()+"\n";
+                message += " "+i+". Student ID: "+newStudent.getStudentID()+" IP: "+connected.get(i).getInetAddress()+"\n";
             }
         }
         System.out.println("After the loop.Hit: "+hit);
@@ -277,7 +278,7 @@ public class ServerMain extends JFrame implements ActionListener {
             int reply = JOptionPane.showConfirmDialog(null, message, "Someone might me cheating", JOptionPane.YES_NO_OPTION);
             if (reply == JOptionPane.YES_OPTION) {
                 connected.add(newStudent);
-                area.append(id+". Student ID: "+studentID+" IP: "+inetAddress+"\n");
+                area.append(newStudent.getId()+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n");
                 return true;
             }
             else {
@@ -285,9 +286,40 @@ public class ServerMain extends JFrame implements ActionListener {
             }
         }
         connected.add(newStudent);
-        area.append(id+". Student ID: "+studentID+" IP: "+inetAddress+"\n");
+        area.append(newStudent.getId()+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n");
         return true;
     }
 
-    
+    /**
+     * A method used to update the server side interface when a client disconnects.
+     * @param student
+     */
+    public void removeClient(Student student) {
+        System.out.println("Got into removeClient");
+        int i = 0;
+        try {
+            for ( ; i < connected.size(); i++) {
+                System.out.print("  " + i);
+                if (student.compareTo(connected.get(i)) == 0) {
+                    System.out.println(" got");
+                    break;
+                }
+            }
+        }catch (Exception e)
+        {
+            System.out.println("Caught in removeClient: "+e);
+        }
+        System.out.println("Removing No. "+i);
+        connected.remove(i);
+        System.out.println("Removed");
+        String text = "";
+        for ( i = 0 ;i < connected.size() ; i++)
+        {
+            Student temp = connected.get(i);
+            temp.setId(i);
+            text += i+". Student ID: "+temp.getStudentID()+" IP: "+temp.getInetAddress()+"\n";
+        }
+        System.out.println("New list is:\n"+text);
+        area.setText(text);
+    }
 }

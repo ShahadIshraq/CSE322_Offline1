@@ -15,9 +15,10 @@ class WorkerThread implements Runnable
     private InputStream is;
     private OutputStream os;
     private ServerMain serverMain;
-    String studentIP;
+    private ObjectOutputStream outputStream;
 
 
+    private Student student;
     private int studentID ;
     private int id = 0;
 
@@ -52,7 +53,8 @@ class WorkerThread implements Runnable
             //Getting the student ID
             String stID = br.readLine();
             studentID = Integer.parseInt(stID);
-            if(!serverMain.addClient(studentID,id, socket.getInetAddress()))
+            student = new Student(studentID,socket.getInetAddress(),this,id);
+            if(!serverMain.addClient(student))
             {
                 pr.println("Go home");
                 try
@@ -74,10 +76,8 @@ class WorkerThread implements Runnable
 
             //Sending the file types
             System.out.println("Sending file types to "+id);
-            ObjectOutputStream outputStream = new ObjectOutputStream(
-                    socket.getOutputStream());
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
             outputStream.writeObject(serverMain.types);
-            outputStream.flush();
         }catch (Exception e)
         {
             System.out.println(e);
@@ -94,6 +94,7 @@ class WorkerThread implements Runnable
                     if(str.equals("BYE"))
                     {
                         System.out.println("[" + id + "] says: BYE. Worker thread will terminate now.");
+                        serverMain.removeClient(student);
                         break; // terminate the loop; it will terminate the thread also
                     }
                     else if(str.equals("DL"))
@@ -146,12 +147,14 @@ class WorkerThread implements Runnable
                 else
                 {
                     System.out.println("[" + id + "] terminated connection. Worker thread will terminate now.");
+                    serverMain.removeClient(student);
                     break;
                 }
             }
             catch(Exception e)
             {
-                System.err.println("Problem in communicating with the client [" + id + "]. Terminating worker thread.");
+                System.out.println("Problem in communicating with the client [" + id + "]. Terminating worker thread.");
+                serverMain.removeClient(student);
                 break;
             }
         }
