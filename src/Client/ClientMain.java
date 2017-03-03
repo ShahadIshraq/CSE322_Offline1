@@ -61,6 +61,9 @@ public class ClientMain extends JFrame implements ActionListener {
     private boolean isFolderAllowed = false;
     private int maxNoOfFiles;
     private int maxSizeOfFile;
+    private JButton ok;
+    private File file;
+    private JTextArea progress;
 
     public ClientMain()
     {
@@ -72,6 +75,8 @@ public class ClientMain extends JFrame implements ActionListener {
         label3=new JLabel("Student ID");
         tstdid=new JTextField(20);
         jb=new JButton("Connect");
+        ok = new JButton("OK");
+        progress = new JTextArea(20,20);
 
 
         c=getContentPane();
@@ -85,6 +90,7 @@ public class ClientMain extends JFrame implements ActionListener {
 
         c.add(jb);
         jb.addActionListener(this);
+        ok.addActionListener(this);
 
         setSize(550,70);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -95,15 +101,66 @@ public class ClientMain extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent ae)
     {
+        if (ae.getSource() == ok)
+        {
+            c.removeAll();
+            c.repaint();
+            c.add(progress);
+            progress.append("Sending file "+file.getName()+"\n");
+            c.repaint();
+            c.revalidate();
+            try
+            {
+                pr.println("DL");
+                pr.flush();
+                FileInputStream fis = new FileInputStream(file);
+                BufferedInputStream bis = new BufferedInputStream(fis);
+                OutputStream os = s.getOutputStream();
+                byte[] contents;
+                long fileLength = file.length();
+                pr.println(file.getName());		            //These two lines are used
+                pr.flush();									//to send the file name.
+
+                pr.println(String.valueOf(fileLength));		//These two lines are used
+                pr.flush();									//to send the file size in bytes.
+
+                long current = 0;
+
+                long start = System.nanoTime();
+                while(current!=fileLength){
+                    int size = 10000;
+                    if(fileLength - current >= size)
+                        current += size;
+                    else{
+                        size = (int)(fileLength - current);
+                        current = fileLength;
+                    }
+                    contents = new byte[size];
+                    bis.read(contents, 0, size);
+                    os.write(contents);
+                    progress.append("Sending file ... "+(current*100)/fileLength+"% complete!\n");
+                    System.out.println("Sending file ... "+(current*100)/fileLength+"% complete!");
+                }
+                os.flush();
+                progress.append("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!\n");
+                System.out.println("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!");
+            }
+            catch(Exception e)
+            {
+                System.err.println("Could not transfer file.");
+            }
+            pr.println("Downloaded.");
+            pr.flush();
+        }
         if(ae.getSource()== upload)
         {
             fc = new JFileChooser();
-            fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            if (isFolderAllowed)fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            else fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             int returnVal = fc.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File file = fc.getSelectedFile();
-                //This is where a real application would open the file.
-                label1 = new JLabel("Opening: " + file.getAbsolutePath());
+                file = fc.getSelectedFile();
+                label1 = new JLabel("Upload \\'" + file.getAbsolutePath()+"\\' ?");
             } else {
                 label1 = new JLabel("Open command cancelled by user.");
             }
@@ -112,6 +169,7 @@ public class ClientMain extends JFrame implements ActionListener {
             c.revalidate();
             c.repaint();
             c.add(label1);
+            c.add(ok);
             c.revalidate();
             c.repaint();
         }

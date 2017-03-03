@@ -21,6 +21,7 @@ class WorkerThread implements Runnable
     private Student student;
     private int studentID ;
     private int id = 0;
+    private String strRecv;
 
     public WorkerThread(Socket s, int id , ServerMain serverMain)
     {
@@ -135,40 +136,37 @@ class WorkerThread implements Runnable
                     {
                         try
                         {
-                            File file = new File("capture.jpg");
-                            FileInputStream fis = new FileInputStream(file);
-                            BufferedInputStream bis = new BufferedInputStream(fis);
-                            OutputStream os = socket.getOutputStream();
-                            byte[] contents;
-                            long fileLength = file.length();
-                            pr.println(String.valueOf(fileLength));		//These two lines are used
-                            pr.flush();									//to send the file size in bytes.
+                            strRecv = br.readLine();					//These two lines are used to determine
+                            String fileName = strRecv;		            //the name of the receiving file
 
-                            long current = 0;
+                            strRecv = br.readLine();					//These two lines are used to determine
+                            int filesize=Integer.parseInt(strRecv);		//the size of the receiving file
+                            byte[] contents = new byte[10000];
 
-                            long start = System.nanoTime();
-                            while(current!=fileLength){
-                                int size = 10000;
-                                if(fileLength - current >= size)
-                                    current += size;
-                                else{
-                                    size = (int)(fileLength - current);
-                                    current = fileLength;
-                                }
-                                contents = new byte[size];
-                                bis.read(contents, 0, size);
-                                os.write(contents);
-                                System.out.println("Sending file ... "+(current*100)/fileLength+"% complete!");
+                            FileOutputStream fos = new FileOutputStream(fileName);
+                            System.out.println("created the new file for downloading.");
+                            BufferedOutputStream bos = new BufferedOutputStream(fos);
+                            System.out.println("bos initialized");
+                            InputStream is = socket.getInputStream();
+                            System.out.println("GOt inputStream");
+                            int bytesRead = 0;
+                            int total=0;			//how many bytes read
+                            System.out.print("\nReceiving");
+                            while(total!=filesize)	//loop is continued until received byte=totalfilesize
+                            {
+                                System.out.print(".");
+                                bytesRead=is.read(contents);
+                                total+=bytesRead;
+                                bos.write(contents, 0, bytesRead);
                             }
-                            os.flush();
-                            System.out.println("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!");
+                            bos.flush();
+                            System.out.println("\nDone.");
                         }
                         catch(Exception e)
                         {
                             System.err.println("Could not transfer file.");
                         }
-                        pr.println("Downloaded.");
-                        pr.flush();
+
 
                     }
                     else
