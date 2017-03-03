@@ -124,12 +124,7 @@ public class ClientMain extends JFrame implements ActionListener {
                     JOptionPane.showMessageDialog(null, "Could not connect to the server!");
                     return;
                 }
-                System.out.println("Changing the dialogue box...");
-                //removing current elements
-                c.removeAll();
-                c.repaint();
-                revalidate();
-                System.out.println("Changed...");
+
 
                 ///////////////////////////////////////////////////////
                 ///Chatting with the server about the specifications///
@@ -137,16 +132,32 @@ public class ClientMain extends JFrame implements ActionListener {
 
 
                 //getting the allowed file types
-                inputStream = new ObjectInputStream(s.getInputStream());
-                System.out.println("Getting the file types...");
-                String[] types = (String[]) inputStream.readObject();
-                String fTypes = "";
-                for (int i = 0; i < types.length ; i++) fTypes += types[i]+" ";
-                JOptionPane.showMessageDialog(null, "Allowed file types: "+fTypes);
-                fileTypes = new ArrayList(Arrays.asList(types));
-                if (fileTypes.contains("py")) System.out.println("oka");
-                //
+                System.out.print("Waiting for the file types.");
+                fileTypes = new ArrayList();
+                System.out.print("..\n");
+                String tt = br.readLine() ;
+                System.out.println(".\n  Got no of types: "+tt);
+                pr.println("Got it");
+                pr.flush();
+                int i = Integer.parseInt(tt);
 
+
+                for (; i > 0 ; i-- ) {
+                    tt = br.readLine();
+                    System.out.print(" "+tt);
+                    fileTypes.add(tt);
+                }
+                System.out.println("Creating the alert...");
+                String fTypes = "";
+                for (int j = 0 ; j < fileTypes.size() ; j++) fTypes += fileTypes.get(j)+" ";
+                System.out.println("Added them all.");
+                JOptionPane.showMessageDialog(null, "Allowed file types: "+fTypes);
+                if (fileTypes.contains("py")) System.out.println("oka");
+
+                //removing all elements from the current content pane
+                System.out.println("Changing...");
+                c.removeAll();
+                c.repaint();
                 //adding Upload button
                 this.setTitle("Upload");
                 upload =new JButton("Upload",
@@ -172,6 +183,9 @@ public class ClientMain extends JFrame implements ActionListener {
             s = new Socket(IP, port);
             br = new BufferedReader(new InputStreamReader(s.getInputStream()));
             pr = new PrintWriter(s.getOutputStream());
+
+
+            //Sending StudentID
             System.out.println("Sending student ID");
             pr.println(Integer.toString(stdID));
             pr.flush();

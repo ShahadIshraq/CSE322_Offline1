@@ -239,6 +239,7 @@ public class ServerMain extends JFrame implements ActionListener {
 
     /**
      * A method used to update the server side interface when a client connects.
+     * This implementation does not expect concurrent file transfer from the same IP.
      * @param newStudent
      */
     public boolean addClient(Student newStudent)
@@ -246,6 +247,7 @@ public class ServerMain extends JFrame implements ActionListener {
         System.out.println("In addClient");
 
         boolean hit = false;
+        boolean sameStudent = false;
         String message = "Connection request from Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\nMatches: \n";
         for (int i = 0 ; i < connected.size() ; i++)
         {
@@ -256,6 +258,7 @@ public class ServerMain extends JFrame implements ActionListener {
                 if (newStudent.getStudentID() == connected.get(i).getStudentID())
                 {
                     //Another connection request from the same student ID and IP
+                    sameStudent = true;
                     message += " "+i+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n";
                 }
                 else
@@ -268,6 +271,7 @@ public class ServerMain extends JFrame implements ActionListener {
             else if (newStudent.getStudentID() == connected.get(i).getStudentID())
             {
                 hit = true ;
+                sameStudent = true;
                 //Another connection request from the same student ID
                 message += " "+i+". Student ID: "+newStudent.getStudentID()+" IP: "+connected.get(i).getInetAddress()+"\n";
             }
@@ -277,8 +281,8 @@ public class ServerMain extends JFrame implements ActionListener {
             message += "Allow the connection?";
             int reply = JOptionPane.showConfirmDialog(null, message, "Someone might me cheating", JOptionPane.YES_NO_OPTION);
             if (reply == JOptionPane.YES_OPTION) {
-                connected.add(newStudent);
-                area.append(newStudent.getId()+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n");
+                if (!sameStudent) connected.add(newStudent);
+                area.append("Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+" connected\n");
                 return true;
             }
             else {
@@ -286,40 +290,17 @@ public class ServerMain extends JFrame implements ActionListener {
             }
         }
         connected.add(newStudent);
-        area.append(newStudent.getId()+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n");
+        area.append("Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+" connected\n");
         return true;
     }
+
 
     /**
      * A method used to update the server side interface when a client disconnects.
      * @param student
      */
     public void removeClient(Student student) {
-        System.out.println("Got into removeClient");
-        int i = 0;
-        try {
-            for ( ; i < connected.size(); i++) {
-                System.out.print("  " + i);
-                if (student.compareTo(connected.get(i)) == 0) {
-                    System.out.println(" got");
-                    break;
-                }
-            }
-        }catch (Exception e)
-        {
-            System.out.println("Caught in removeClient: "+e);
-        }
-        System.out.println("Removing No. "+i);
-        connected.remove(i);
-        System.out.println("Removed");
-        String text = "";
-        for ( i = 0 ;i < connected.size() ; i++)
-        {
-            Student temp = connected.get(i);
-            temp.setId(i);
-            text += i+". Student ID: "+temp.getStudentID()+" IP: "+temp.getInetAddress()+"\n";
-        }
-        System.out.println("New list is:\n"+text);
-        area.setText(text);
+
+        area.append("Student ID: "+student.getStudentID()+" IP: "+student.getInetAddress()+" left.");
     }
 }

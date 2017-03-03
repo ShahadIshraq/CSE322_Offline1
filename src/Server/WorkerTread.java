@@ -57,6 +57,7 @@ class WorkerThread implements Runnable
             if(!serverMain.addClient(student))
             {
                 pr.println("Go home");
+                pr.flush();
                 try
                 {
                     this.is.close();
@@ -70,14 +71,30 @@ class WorkerThread implements Runnable
                 System.out.println("Denied connection to "+studentID+"@"+socket.getInetAddress());
                 return;
             }
-            else pr.println("ok");
-            pr.flush();
-
+            else {
+                pr.println("ok");
+                pr.flush();
+            }
 
             //Sending the file types
             System.out.println("Sending file types to "+id);
-            outputStream = new ObjectOutputStream(socket.getOutputStream());
-            outputStream.writeObject(serverMain.types);
+            System.out.println("Sending no of types ("+serverMain.types.length+") to "+id);
+            pr.println(serverMain.types.length);
+            pr.flush();
+            while(!br.readLine().equals("Got it"))
+            {
+                System.out.println("    Resending...");
+                pr.println(serverMain.types.length);
+                pr.flush();
+            }
+            for (int i = 0 ; i < serverMain.types.length ; i++)
+            {
+                System.out.print(" "+serverMain.types[i]);
+                pr.println(serverMain.types[i]) ;
+                pr.flush();
+            }
+            System.out.println();
+
         }catch (Exception e)
         {
             System.out.println(e);
