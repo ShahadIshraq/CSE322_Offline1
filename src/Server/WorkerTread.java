@@ -44,9 +44,7 @@ class WorkerThread implements Runnable
     {
         BufferedReader br = new BufferedReader(new InputStreamReader(this.is));
         PrintWriter pr = new PrintWriter(this.os);
-        ///////////////////////////////////////////////////
-        ///Chatting with the client about specifications///
-        ///////////////////////////////////////////////////
+
 
         try {
 
@@ -76,24 +74,43 @@ class WorkerThread implements Runnable
                 pr.flush();
             }
 
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///     Chatting with the client about the specifications                                                 ///
+            ///     Things to get:                                                                                    ///
+            ///              -File types: Allowable file types that a client can upload.                              ///
+            ///              - Number of files and folder: Number of files a client is allowed to upload and          ///
+            ///               whether a client is able to upload folder.                                              ///
+            ///              -Max file size: Maximum file size that a client is allowed to upload.                    ///
+            ///                                                                                                       ///
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
             //Sending the file types
             System.out.println("Sending file types to "+id);
             System.out.println("Sending no of types ("+serverMain.types.length+") to "+id);
             pr.println(serverMain.types.length);
             pr.flush();
-            while(!br.readLine().equals("Got it"))
-            {
-                System.out.println("    Resending...");
-                pr.println(serverMain.types.length);
-                pr.flush();
-            }
+//            if (!br.readLine().equals("Got it")) throw new Exception("Error in communication.");
+
             for (int i = 0 ; i < serverMain.types.length ; i++)
             {
                 System.out.print(" "+serverMain.types[i]);
                 pr.println(serverMain.types[i]) ;
                 pr.flush();
             }
-            System.out.println();
+
+            //Whether folders are allowed
+            System.out.println(serverMain.folder);
+            pr.println(serverMain.folder);
+            pr.flush();
+
+            //The maximum number of files
+            pr.println(serverMain.numberOfFiles);
+            pr.flush();
+
+            //The maximum file size
+            pr.println(serverMain.maxFileSize);
+            pr.flush();
 
         }catch (Exception e)
         {

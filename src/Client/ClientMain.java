@@ -58,6 +58,9 @@ public class ClientMain extends JFrame implements ActionListener {
 
     //Specifications
     private ArrayList<String> fileTypes;
+    private boolean isFolderAllowed = false;
+    private int maxNoOfFiles;
+    private int maxSizeOfFile;
 
     public ClientMain()
     {
@@ -126,22 +129,28 @@ public class ClientMain extends JFrame implements ActionListener {
                 }
 
 
-                ///////////////////////////////////////////////////////
-                ///Chatting with the server about the specifications///
-                ///////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ///     Chatting with the server about the specifications                                                 ///
+                ///     Things to get:                                                                                    ///
+                ///              -File types: Allowable file types that a client can upload.                              ///
+                ///              - Number of files and folder: Number of files a client is allowed to upload and          ///
+                ///               whether a client is able to upload folder.                                              ///
+                ///              -Max file size: Maximum file size that a client is allowed to upload.                    ///
+                ///                                                                                                       ///
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
                 //getting the allowed file types
-                System.out.print("Waiting for the file types.");
+                System.out.print("Waiting for the no. of file types.");
                 fileTypes = new ArrayList();
                 System.out.print("..\n");
                 String tt = br.readLine() ;
                 System.out.println(".\n  Got no of types: "+tt);
-                pr.println("Got it");
-                pr.flush();
+//                pr.println("Got it");
+//                pr.flush();
                 int i = Integer.parseInt(tt);
 
-
+                //Getting the file types
                 for (; i > 0 ; i-- ) {
                     tt = br.readLine();
                     System.out.print(" "+tt);
@@ -151,8 +160,25 @@ public class ClientMain extends JFrame implements ActionListener {
                 String fTypes = "";
                 for (int j = 0 ; j < fileTypes.size() ; j++) fTypes += fileTypes.get(j)+" ";
                 System.out.println("Added them all.");
+
+//                if (fileTypes.contains("py")) System.out.println("oka");
+                //Whether folders are allowed
+                tt = br.readLine();
+                if (tt.equals("true")) isFolderAllowed = true;
+
+                //The maximum number of files
+                tt = br.readLine();
+                maxNoOfFiles = Integer.parseInt(tt);
+
+                //The maximum file size
+                tt = br.readLine();
+                maxSizeOfFile = Integer.parseInt(tt);
+
+                fTypes += "\nFolder uploading allowed: "+isFolderAllowed+
+                            "\nMaximum number of files allowed: "+maxNoOfFiles+
+                            "\nMaximum allowed size of file: "+maxSizeOfFile+" kB.";
                 JOptionPane.showMessageDialog(null, "Allowed file types: "+fTypes);
-                if (fileTypes.contains("py")) System.out.println("oka");
+
 
                 //removing all elements from the current content pane
                 System.out.println("Changing...");
@@ -160,8 +186,7 @@ public class ClientMain extends JFrame implements ActionListener {
                 c.repaint();
                 //adding Upload button
                 this.setTitle("Upload");
-                upload =new JButton("Upload",
-                        new ImageIcon("Open16.gif"));
+                upload =new JButton("Upload", new ImageIcon("Open16.gif"));
                 upload.addActionListener(this);
                 c.setLayout(new FlowLayout());
                 c.add(upload);

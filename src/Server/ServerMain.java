@@ -41,12 +41,15 @@ import java.util.ArrayList;
  */
 public class ServerMain extends JFrame implements ActionListener {
 
+    
+    JLabel label;
     JLabel label1; //root
     JLabel label2; // File Types
     JLabel label3; //Number of folders
     JLabel label4; //Allowable Student IDs
     JLabel label5; //Is folder allowed?
 
+    JTextField mSize;
     JTextField root;
     JTextField fType;
     JTextField nOf;
@@ -56,6 +59,7 @@ public class ServerMain extends JFrame implements ActionListener {
     String path,types[];
     boolean folder,range;
     int ids [] , numberOfFiles;
+    boolean isRange;
 
     ButtonGroup group;
     JButton jb;
@@ -64,6 +68,7 @@ public class ServerMain extends JFrame implements ActionListener {
     Container c;
     JTextArea area;
     private ArrayList<Student> connected;
+    protected int maxFileSize;
 
 
     public ServerMain()
@@ -75,6 +80,7 @@ public class ServerMain extends JFrame implements ActionListener {
         label1 = new JLabel("Root");
         label2 = new JLabel("Fyle Type");
         label3 = new JLabel("Max No. of files/folders allowed");
+        label = new JLabel("Max size of folder (kB)");
         label4 = new JLabel("Allowable Student IDs");
         label5 = new JLabel("Allow uploading folder?");
 
@@ -83,7 +89,8 @@ public class ServerMain extends JFrame implements ActionListener {
         fType = new JTextField(10);
         nOf = new JTextField(5);
         stdIDs = new JTextField(10);
-
+        mSize = new JTextField(10);
+        
         //initializing buttons
         jb = new JButton("Save");
         browse = new JButton("Browse",new ImageIcon("Open16.gif"));
@@ -107,6 +114,8 @@ public class ServerMain extends JFrame implements ActionListener {
         c.add(nOf);
         c.add(label4);
         c.add(stdIDs);
+        c.add(label);
+        c.add(mSize);
         c.add(label5);
         c.add(yes);
         c.add(no);
@@ -117,7 +126,7 @@ public class ServerMain extends JFrame implements ActionListener {
         browse.addActionListener(this);
 
         //setting the frame
-        setSize(300,160);
+        setSize(300,200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocation(300,300);
         setVisible(true);
@@ -151,9 +160,10 @@ public class ServerMain extends JFrame implements ActionListener {
                 path = root.getText();
                 types = fType.getText().split(",");
                 numberOfFiles = Integer.parseInt(nOf.getText());
+                maxFileSize = Integer.parseInt(mSize.getText());
                 String in = stdIDs.getText();
-                boolean allowFolder = yes.isSelected();
-                boolean isRange = false;
+                folder = yes.isSelected();
+                isRange = false;
                 String temp [];
                 int startID,endID,IDs[];
                 if (in.matches("(\\d)+\\-(\\d)+")) {
