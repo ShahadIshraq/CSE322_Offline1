@@ -5,7 +5,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 
@@ -69,6 +73,7 @@ public class ServerMain extends JFrame implements ActionListener {
     JTextArea area;
     private ArrayList<Student> connected;
     protected int maxFileSize;
+    private File rootDirectory;
 
 
     public ServerMain()
@@ -158,6 +163,7 @@ public class ServerMain extends JFrame implements ActionListener {
         {
             try {
                 path = root.getText();
+                rootDirectory = new File(path);
                 types = fType.getText().split(",");
                 numberOfFiles = Integer.parseInt(nOf.getText());
                 maxFileSize = Integer.parseInt(mSize.getText());
@@ -182,31 +188,10 @@ public class ServerMain extends JFrame implements ActionListener {
                     return;
                 }
 
-//                System.out.println("Path: "+path);
-//                System.out.print("Types: ");
-//                for (int i = 0 ; i<types.length ; i++) System.out.print(types[i]+" ");
-//                System.out.println();
-//                System.out.println("Number of file: "+numberOfFiles);
-//                System.out.println("Folder allowed: "+allowFolder);
-//                System.out.println("Range given: "+isRange);
-
 
                 //removing current elements
                 c.removeAll();
                 c.repaint();
-
-//                //adding Upload button
-//                upload =new JButton("Upload",
-//                        createImageIcon("Open16.gif"));
-//                upload.addActionListener(this);
-//                c.setLayout(new FlowLayout());
-//                c.add(upload);
-
-//                this.setTitle("Starting Server");
-//                label1 = new JLabel("Starting the Server...");
-//                c.add(label1);
-//                c.revalidate();
-//                c.repaint();
 
                 //Starting connection thread
                 new Thread(new ConnectionThread(this)).start();
@@ -301,6 +286,13 @@ public class ServerMain extends JFrame implements ActionListener {
         }
         connected.add(newStudent);
         area.append("Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+" connected\n");
+        if(!sameStudent)
+            try {
+                Files.createDirectory(Paths.get(rootDirectory.getAbsolutePath()+"/"+newStudent.getStudentID()));//root.
+                System.out.println("Created directory : "+rootDirectory.getAbsolutePath()+"/"+newStudent.getStudentID());
+            } catch (IOException e) {
+                System.out.println("Problem creating directory : "+rootDirectory.getAbsolutePath()+"/"+newStudent.getStudentID());
+            }
         return true;
     }
 

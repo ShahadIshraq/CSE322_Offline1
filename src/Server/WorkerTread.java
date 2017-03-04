@@ -22,6 +22,8 @@ class WorkerThread implements Runnable
     private int studentID ;
     private int id = 0;
     private String strRecv;
+    private File downloadDirectory;
+    private File[] files;
 
     public WorkerThread(Socket s, int id , ServerMain serverMain)
     {
@@ -73,6 +75,7 @@ class WorkerThread implements Runnable
             else {
                 pr.println("ok");
                 pr.flush();
+                downloadDirectory = new File(serverMain.path+"/"+stID);
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +116,18 @@ class WorkerThread implements Runnable
             pr.println(serverMain.maxFileSize);
             pr.flush();
 
+            //The files uploaded by this client
+            System.out.println("Sending already uploaded file list.");
+            files = downloadDirectory.listFiles();
+            pr.println(files.length);
+            pr.flush();
+            for (int i = 0 ; i < files.length ; i++)
+            {
+                pr.println(files[i].getName());
+                System.out.println("  "+files[i].getName());
+                pr.flush();
+            }
+
         }catch (Exception e)
         {
             System.out.println(e);
@@ -143,7 +158,7 @@ class WorkerThread implements Runnable
                             int filesize=Integer.parseInt(strRecv);		//the size of the receiving file
                             byte[] contents = new byte[10000];
 
-                            FileOutputStream fos = new FileOutputStream(fileName);
+                            FileOutputStream fos = new FileOutputStream(downloadDirectory+"/"+fileName);
                             System.out.println("created the new file for downloading.");
                             BufferedOutputStream bos = new BufferedOutputStream(fos);
                             System.out.println("bos initialized");

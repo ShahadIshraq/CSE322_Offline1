@@ -64,6 +64,8 @@ public class ClientMain extends JFrame implements ActionListener {
     private JButton ok;
     private File file;
     private JTextArea progress;
+    private ArrayList<String> alreadyUploadedFiles;
+    private JTextArea currentFiles;
 
     public ClientMain()
     {
@@ -73,7 +75,7 @@ public class ClientMain extends JFrame implements ActionListener {
         label2=new JLabel("Port");
         tport=new JTextField(20);
         label3=new JLabel("Student ID");
-        tstdid=new JTextField(20);
+        tstdid=new JTextField(10);
         jb=new JButton("Connect");
         ok = new JButton("OK");
         progress = new JTextArea(20,20);
@@ -92,7 +94,7 @@ public class ClientMain extends JFrame implements ActionListener {
         jb.addActionListener(this);
         ok.addActionListener(this);
 
-        setSize(550,70);
+        setSize(270,200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocation(300,300);
         setVisible(true);
@@ -144,6 +146,8 @@ public class ClientMain extends JFrame implements ActionListener {
                 os.flush();
                 progress.append("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!\n");
                 System.out.println("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!");
+                JOptionPane.showMessageDialog(null,"File sent successfully in "+
+                        (System.nanoTime()-start)/1000000000.0 + " seconds!");
             }
             catch(Exception e)
             {
@@ -151,7 +155,19 @@ public class ClientMain extends JFrame implements ActionListener {
             }
             pr.println("Downloaded.");
             pr.flush();
+            alreadyUploadedFiles.add(file.getName());
+            currentFiles.append(file.getName()+"\n");
+
+            //showing upload prompt again
+            c.removeAll();
+            c.repaint();
+            c.add(currentFiles);
+            c.add(upload);
+            c.revalidate();
+            c.repaint();
+
         }
+
         if(ae.getSource()== upload)
         {
             fc = new JFileChooser();
@@ -237,16 +253,28 @@ public class ClientMain extends JFrame implements ActionListener {
                             "\nMaximum allowed size of file: "+maxSizeOfFile+" kB.";
                 JOptionPane.showMessageDialog(null, "Allowed file types: "+fTypes);
 
+                //Getting the already uploaded files
+                int j = Integer.parseInt(br.readLine());
+                alreadyUploadedFiles = new ArrayList();
+                currentFiles = new JTextArea(10,20);
+                for ( ; j > 0 ; j--)
+                {
+                    tt = br.readLine();
+                    alreadyUploadedFiles.add(tt);
+                    currentFiles.append(tt+"\n");
+                }
 
                 //removing all elements from the current content pane
                 System.out.println("Changing...");
                 c.removeAll();
                 c.repaint();
-                //adding Upload button
+
+                //adding Upload button and current files at the server
                 this.setTitle("Upload");
                 upload =new JButton("Upload", new ImageIcon("Open16.gif"));
                 upload.addActionListener(this);
                 c.setLayout(new FlowLayout());
+                c.add(currentFiles);
                 c.add(upload);
                 c.revalidate();
                 c.repaint();
