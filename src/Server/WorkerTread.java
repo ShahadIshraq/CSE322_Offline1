@@ -159,22 +159,25 @@ class WorkerThread implements Runnable
                             byte[] contents = new byte[10000];
 
                             FileOutputStream fos = new FileOutputStream(downloadDirectory+"/"+fileName);
-                            System.out.println("created the new file for downloading.");
+                            System.out.println("["+id+"] created the new file for downloading.");
                             BufferedOutputStream bos = new BufferedOutputStream(fos);
-                            System.out.println("bos initialized");
+                            System.out.println("["+id+"]bos initialized");
                             InputStream is = socket.getInputStream();
-                            System.out.println("GOt inputStream");
+                            System.out.println("["+id+"]Got inputStream");
                             int bytesRead = 0;
                             int total=0;			//how many bytes read
-                            System.out.print("\nReceiving");
+                            //System.out.print("\n"+"["+id+"] Receiving");
                             while(total!=filesize)	//loop is continued until received byte=totalfilesize
                             {
-                                System.out.print(".");
+                                System.out.println("["+id+"] "+total+" "+fileName);
                                 bytesRead=is.read(contents);
+                                System.out.println("["+id+"] bytes read: "+bytesRead);
                                 total+=bytesRead;
                                 bos.write(contents, 0, bytesRead);
+                                System.out.println("["+id+"] written to bos");
                             }
                             bos.flush();
+                            //fos.flush();
                             System.out.println("\nDone.");
                         }
                         catch(Exception e)

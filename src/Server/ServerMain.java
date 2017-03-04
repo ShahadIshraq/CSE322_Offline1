@@ -254,7 +254,7 @@ public class ServerMain extends JFrame implements ActionListener {
                 {
                     //Another connection request from the same student ID and IP
                     sameStudent = true;
-                    message += " "+i+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n";
+                    //message += " "+i+". Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+"\n";
                 }
                 else
                 {
@@ -265,14 +265,13 @@ public class ServerMain extends JFrame implements ActionListener {
             }
             else if (newStudent.getStudentID() == connected.get(i).getStudentID())
             {
-                hit = true ;
                 sameStudent = true;
                 //Another connection request from the same student ID
                 message += " "+i+". Student ID: "+newStudent.getStudentID()+" IP: "+connected.get(i).getInetAddress()+"\n";
             }
         }
         System.out.println("After the loop.Hit: "+hit);
-        if (hit) {
+        if ((hit && !sameStudent) || (!hit && sameStudent)) {
             message += "Allow the connection?";
             int reply = JOptionPane.showConfirmDialog(null, message, "Someone might me cheating", JOptionPane.YES_NO_OPTION);
             if (reply == JOptionPane.YES_OPTION) {
@@ -284,15 +283,18 @@ public class ServerMain extends JFrame implements ActionListener {
                 return false;
             }
         }
-        connected.add(newStudent);
-        area.append("Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+" connected\n");
-        if(!sameStudent)
+        else if (!sameStudent) {
+            connected.add(newStudent);
+            area.append("Student ID: " + newStudent.getStudentID() + " IP: " + newStudent.getInetAddress() + " connected\n");
             try {
                 Files.createDirectory(Paths.get(rootDirectory.getAbsolutePath()+"/"+newStudent.getStudentID()));//root.
                 System.out.println("Created directory : "+rootDirectory.getAbsolutePath()+"/"+newStudent.getStudentID());
             } catch (IOException e) {
                 System.out.println("Problem creating directory : "+rootDirectory.getAbsolutePath()+"/"+newStudent.getStudentID());
             }
+            return true;
+        }
+        area.append("Student ID: "+newStudent.getStudentID()+" IP: "+newStudent.getInetAddress()+" connected\n");
         return true;
     }
 

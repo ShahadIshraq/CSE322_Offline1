@@ -108,7 +108,7 @@ public class ClientMain extends JFrame implements ActionListener {
             c.removeAll();
             c.repaint();
             c.add(progress);
-            progress.append("Sending file "+file.getName()+"\n");
+            progress.setText("Sending file "+file.getName()+"\n");
             c.repaint();
             c.revalidate();
             try
@@ -125,12 +125,11 @@ public class ClientMain extends JFrame implements ActionListener {
 
                 pr.println(String.valueOf(fileLength));		//These two lines are used
                 pr.flush();									//to send the file size in bytes.
-
+//File Name::Starting Byte Number::Size of Segment::File Data
                 long current = 0;
-
                 long start = System.nanoTime();
                 while(current!=fileLength){
-                    int size = 10000;
+                    int size = 512;
                     if(fileLength - current >= size)
                         current += size;
                     else{
@@ -140,10 +139,11 @@ public class ClientMain extends JFrame implements ActionListener {
                     contents = new byte[size];
                     bis.read(contents, 0, size);
                     os.write(contents);
-                    progress.append("Sending file ... "+(current*100)/fileLength+"% complete!\n");
+                    os.flush();
+                    progress.setText("Sending file "+file.getName()+"\nSending file ... "+(current*100)/fileLength+"% complete!\n");
                     System.out.println("Sending file ... "+(current*100)/fileLength+"% complete!");
                 }
-                os.flush();
+
                 progress.append("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!\n");
                 System.out.println("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!");
                 JOptionPane.showMessageDialog(null,"File sent successfully in "+
@@ -153,7 +153,7 @@ public class ClientMain extends JFrame implements ActionListener {
             {
                 System.err.println("Could not transfer file.");
             }
-            pr.println("Downloaded.");
+            pr.println("Uploaded.");
             pr.flush();
             alreadyUploadedFiles.add(file.getName());
             currentFiles.append(file.getName()+"\n");
@@ -176,7 +176,7 @@ public class ClientMain extends JFrame implements ActionListener {
             int returnVal = fc.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 file = fc.getSelectedFile();
-                label1 = new JLabel("Upload \\'" + file.getAbsolutePath()+"\\' ?");
+                label1 = new JLabel("Upload\n \'" + file.getAbsolutePath()+"\' ?");
             } else {
                 label1 = new JLabel("Open command cancelled by user.");
             }
@@ -230,12 +230,13 @@ public class ClientMain extends JFrame implements ActionListener {
                     System.out.print(" "+tt);
                     fileTypes.add(tt);
                 }
-                System.out.println("Creating the alert...");
+                System.out.println("\nCreating the alert...");
                 String fTypes = "";
                 for (int j = 0 ; j < fileTypes.size() ; j++) fTypes += fileTypes.get(j)+" ";
                 System.out.println("Added them all.");
 
 //                if (fileTypes.contains("py")) System.out.println("oka");
+
                 //Whether folders are allowed
                 tt = br.readLine();
                 if (tt.equals("true")) isFolderAllowed = true;
