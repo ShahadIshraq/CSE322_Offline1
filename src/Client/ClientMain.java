@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -66,6 +67,7 @@ public class ClientMain extends JFrame implements ActionListener {
     private JTextArea progress;
     private ArrayList<String> alreadyUploadedFiles;
     private JTextArea currentFiles;
+    private File[] files;
 
     public ClientMain()
     {
@@ -113,45 +115,29 @@ public class ClientMain extends JFrame implements ActionListener {
             c.revalidate();
             try
             {
+                int nof = 1;
+                if (file.isDirectory()) {
+                    files = file.listFiles();
+                    if (files.length + alreadyUploadedFiles.size() >= maxNoOfFiles) {
+                        JOptionPane.showMessageDialog(null, "You can not upload more than " + maxNoOfFiles +
+                                " files.");
+                        return;
+                    }
+                    nof = files.length;
+                }
                 pr.println("DL");
                 pr.flush();
-                FileInputStream fis = new FileInputStream(file);
-                BufferedInputStream bis = new BufferedInputStream(fis);
-                OutputStream os = s.getOutputStream();
-                byte[] contents;
-                long fileLength = file.length();
-                pr.println(file.getName());		            //These two lines are used
-                pr.flush();									//to send the file name.
 
-                pr.println(String.valueOf(fileLength));		//These two lines are used
-                pr.flush();									//to send the file size in bytes.
-//File Name::Starting Byte Number::Size of Segment::File Data
-                long current = 0;
-                long start = System.nanoTime();
-                while(current!=fileLength){
-                    int size = 512;
-                    if(fileLength - current >= size)
-                        current += size;
-                    else{
-                        size = (int)(fileLength - current);
-                        current = fileLength;
-                    }
-                    contents = new byte[size];
-                    bis.read(contents, 0, size);
-                    os.write(contents);
-                    os.flush();
-                    progress.setText("Sending file "+file.getName()+"\nSending file ... "+(current*100)/fileLength+"% complete!\n");
-                    System.out.println("Sending file ... "+(current*100)/fileLength+"% complete!");
-                }
+                /**
+                 * Now the branching related to folder upload will start
+                 */
+                if(sendFile(file)) System.out.println("Sent");
 
-                progress.append("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!\n");
-                System.out.println("File sent successfully in "+(System.nanoTime()-start)/1000000000.0 + " seconds!");
-                JOptionPane.showMessageDialog(null,"File sent successfully in "+
-                        (System.nanoTime()-start)/1000000000.0 + " seconds!");
+
             }
             catch(Exception e)
             {
-                System.err.println("Could not transfer file.");
+                System.err.println("Could not transfer file. "+e);
             }
             pr.println("Uploaded.");
             pr.flush();
@@ -288,6 +274,75 @@ public class ClientMain extends JFrame implements ActionListener {
         }
     }
 
+
+    private boolean sendFile(File file) throws IOException {
+        long fileLength = file.length();
+        pr.println(file.getName());		            //These two lines are used
+        pr.flush();									//to send the file name.
+        System.out.println("The size : "+String.valueOf(fileLength));
+        pr.println(String.valueOf(fileLength));		//These two lines are used
+        pr.flush();									//to send the file size in bytes.
+
+        FileInputStream fis = new FileInputStream(file);
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        OutputStream os = s.getOutputStream();
+        byte[] contents;
+        long current = 0;
+        long tCurrent = 0;
+        long start = System.nanoTime();
+        boolean flag = true;
+        while(current!=fileLength){
+            tCurrent = current;
+            int size = 512;
+            if(fileLength - current >= size)
+                current += size;
+            else{
+                size = (int)(fileLength - current);
+                current = fileLength;
+            }
+            contents = new byte[size];
+            //File Name::Starting Byte Number::Size of Segment::File Data
+
+            if (flag)bis.read(contents, 0, size);
+
+            byte[] a = (file.getName()+"::"+tCurrent+"::"+size+"::").getBytes();
+            System.out.println(new String(a));
+            byte[] result = new byte[a.length + contents.length];
+            // copy a to result
+            System.arraycopy(a, 0, result, 0, a.length);
+            // copy b to result
+            System.arraycopy(contents, 0, result, a.length, contents.length);
+
+            //String sContents = new String(result);
+            //System.out.println("Sending: "+sContents);
+
+            os.write(result);
+            os.flush();
+            String Tack;
+            Tack = br.readLine();
+            System.out.println("Ack: "+Tack);
+            if (!Tack.equals("ok"))
+            {
+                System.out.println("Got no");
+                flag = false;
+                current = tCurrent;
+                continue;
+            }
+            flag = true;
+            progress.setText("Sending file "+file.getName()+"\nSending file ... "+(current*100)/fileLength+"% complete!\n");
+            System.out.println("Sending file ... "+(current*100)/fileLength+"% complete!");
+        }
+        bis.close();
+        String ack = br.readLine();
+        if (ack.equals("all ok")) {
+            progress.append("File sent successfully in " + (System.nanoTime() - start) / 1000000000.0 + " seconds!\n");
+            System.out.println("File sent successfully in " + (System.nanoTime() - start) / 1000000000.0 + " seconds!");
+            return true;
+        }
+        else return false;
+    }
+
+
     private boolean connect(String IP, int port) {
         System.out.println("Trying to connect...");
         try
@@ -317,6 +372,9 @@ public class ClientMain extends JFrame implements ActionListener {
         System.out.println("Successful!");
         return true;
     }
+
+
+
 
     public static void main(String args[]) { new ClientMain(); }
 }

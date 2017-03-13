@@ -2,6 +2,7 @@ package Server;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 /**
  * This is a modified version of the class with the same name provided as example in the lab.
@@ -149,40 +150,107 @@ class WorkerThread implements Runnable
                     }
                     else if(str.equals("DL"))
                     {
+                        int line = 153;
                         try
                         {
+
+                            int sInde = 0,dataSize = 0;
                             strRecv = br.readLine();					//These two lines are used to determine
                             String fileName = strRecv;		            //the name of the receiving file
 
                             strRecv = br.readLine();					//These two lines are used to determine
-                            int filesize=Integer.parseInt(strRecv);		//the size of the receiving file
-                            byte[] contents = new byte[10000];
+                            int filesize = Integer.parseInt(strRecv);  //the size of the receiving file
+                            System.out.println("Got size: "+filesize);
+                            byte[] contents = new byte[1024];
 
                             FileOutputStream fos = new FileOutputStream(downloadDirectory+"/"+fileName);
-                            System.out.println("["+id+"] created the new file for downloading.");
+                            //System.out.println("["+id+"] created the new file for downloading.");
                             BufferedOutputStream bos = new BufferedOutputStream(fos);
-                            System.out.println("["+id+"]bos initialized");
-                            InputStream is = socket.getInputStream();
-                            System.out.println("["+id+"]Got inputStream");
+                            //System.out.println("["+id+"]bos initialized");
+                            //InputStream is = socket.getInputStream();
+                            //System.out.println("["+id+"]Got inputStream");
                             int bytesRead = 0;
+                            String sContents ;
                             int total=0;			//how many bytes read
+
                             //System.out.print("\n"+"["+id+"] Receiving");
-                            while(total!=filesize)	//loop is continued until received byte=totalfilesize
+                            while(total < filesize)	//loop is continued until received byte=totalfilesize
                             {
-                                System.out.println("["+id+"] "+total+" "+fileName);
-                                bytesRead=is.read(contents);
-                                System.out.println("["+id+"] bytes read: "+bytesRead);
-                                total+=bytesRead;
-                                bos.write(contents, 0, bytesRead);
+                                System.out.println("["+id+"] Total:"+total+"   filesize:"+filesize+" fileName: "+fileName);
+                                System.out.println("in while");
+                                line = 177;
+                                socket.setSoTimeout(3000);
+                                try{
+                                    System.out.println("Trying.");
+                                    bytesRead = is.read(contents);
+                                }
+                                catch (SocketTimeoutException e)
+                                {
+                                    System.out.println("Time out");
+                                    pr.println("no");
+                                    pr.flush();
+                                    continue;
+                                }
+                                //contents = sContents.getBytes();
+                                System.out.println("Not caught? Bytes read: "+bytesRead);
+                                line = 185;
+                                pr.println("ok");
+                                pr.flush();
+                                //System.out.println("["+id+"] bytes read: "+bytesRead);
+                                //System.out.println(".");
+                                int i = 0,j = 0,k = 0;
+                                while(contents[k] != ':') k++;
+                                line = 192;
+                                //System.out.println("..");
+                                i = k - 1;
+                                System.out.println("i: "+i);
+                                k = k + 2;
+                                while(contents[k] != ':') k++;
+                                line = 198;
+                                //System.out.println("...");
+                                j = k - 1;
+                                System.out.println("j: "+j);
+                                k = k + 2;
+                                while(contents[k] != ':') k++;
+                                line = 204;
+                                //System.out.println("....");
+                                k--;
+                                //Getting FileName
+                                System.out.println("k: "+k);
+                                byte [] name =new byte[i+1];
+                                System.arraycopy(contents, 0, name, 0, name.length);
+                                System.out.println(new String(name));
+                                //Getting starting index
+                                name =new byte[j - i - 2];
+                                System.arraycopy(contents, i + 3, name, 0, name.length);
+                                sInde = Integer.parseInt(new String(name));
+                                System.out.println(sInde);
+                                //Getting size
+                                name =new byte[k - j - 2];
+                                System.arraycopy(contents, j + 3, name, 0, name.length);
+                                dataSize = bytesRead - k - 3 ;
+                                System.out.println(dataSize);
+                                //Getting content
+                                //System.out.println(contents.length +" "+(result.length-(k+3)));
+                                name =new byte[dataSize];
+                                //System.out.println(contents.length == name.length);
+                                System.arraycopy(contents, k + 3 , name, 0, dataSize);
+                                System.out.println("decoded data amount : "+name.length);
+                                bos.write(name);
+                                bos.flush();
+                                total += dataSize;
+                                //bos.write(contents, 0, bytesRead);
                                 System.out.println("["+id+"] written to bos");
                             }
                             bos.flush();
-                            //fos.flush();
+                            bos.close();
+                            pr.println("all ok");
+                            pr.flush();
                             System.out.println("\nDone.");
                         }
                         catch(Exception e)
                         {
-                            System.err.println("Could not transfer file.");
+                            System.err.println("Could not transfer file. "+e+" at line: "+line);
                         }
 
 
@@ -203,7 +271,7 @@ class WorkerThread implements Runnable
             }
             catch(Exception e)
             {
-                System.out.println("Problem in communicating with the client [" + id + "]. Terminating worker thread.");
+                System.out.println("Problem in communicating with the client [" + id + "]. Terminating worker thread."+e);
                 serverMain.removeClient(student);
                 break;
             }

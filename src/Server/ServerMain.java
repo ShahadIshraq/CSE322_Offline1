@@ -197,7 +197,7 @@ public class ServerMain extends JFrame implements ActionListener {
                 new Thread(new ConnectionThread(this)).start();
                 this.setTitle("Connected Users");
                 c.removeAll();
-                label1 = new JLabel("This is the list of connected users");
+                label1 = new JLabel("Log");
                 c.add(label1);
                 area = new JTextArea(20,20);
                 c.add(area);
